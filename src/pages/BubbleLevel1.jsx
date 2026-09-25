@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { getBubbleSortSteps } from '../engines/bubbleSortEngine'
 import { classifyError } from '../engines/errorClassifier'
+import { analyzeErrors } from '../engines/errorAnalyzer'
+import { getRemedialMission } from '../engines/remedialEngine'
+import { useNavigate } from 'react-router-dom'
 
 function BubbleLevel1() {
+  const navigate = useNavigate()
   const numbers = [5, 3, 8, 1]
 
   const allSteps = getBubbleSortSteps(numbers)
@@ -16,6 +20,8 @@ function BubbleLevel1() {
   const [showWhy, setShowWhy] = useState(false)
 
   const currentStep = steps[currentStepIndex]
+  const errorAnalysis = analyzeErrors(errors)
+  const remedialMission = getRemedialMission(errorAnalysis.dominantError)
 
   function handleAnswer(answer) {
     const [leftIndex, rightIndex] = currentStep.indices
@@ -47,6 +53,15 @@ function BubbleLevel1() {
         correctAnswer,
       })
 
+      const wrongArray = [...currentStep.array]
+
+      if (answer === 'swap') {
+        ;[wrongArray[leftIndex], wrongArray[rightIndex]] = [
+          wrongArray[rightIndex],
+          wrongArray[leftIndex],
+        ]
+      }
+
       const correctArray = [...currentStep.array]
 
       if (shouldSwap) {
@@ -65,6 +80,7 @@ function BubbleLevel1() {
           correctAnswer,
           values: [leftValue, rightValue],
           arrayBefore: [...currentStep.array],
+          wrongArray,
           correctArray,
         },
       ])
@@ -83,6 +99,36 @@ function BubbleLevel1() {
         <p>Array berhasil diurutkan menjadi: 1 3 5 8</p>
 
         <p>Total Kesalahan: {mistakeCount}</p>
+        <h2>Analisis Kesalahan</h2>
+        <h2>Remedial Mission</h2>
+
+        <h3>{remedialMission.title}</h3>
+
+        <p>
+          {remedialMission.description}
+        </p><button
+          type="button"
+          onClick={() => navigate('/remedial')}
+        >
+          Mulai Remedial Mission
+        </button>
+
+        <p>
+          Comparison Error: {errorAnalysis.comparisonErrors}
+        </p>
+
+        <p>
+          Swap Error: {errorAnalysis.swapErrors}
+        </p>
+
+        <p>
+          Boundary Error: {errorAnalysis.boundaryErrors}
+        </p>
+
+        <p>
+          Kesalahan Dominan:{' '}
+          {errorAnalysis.dominantError || 'Tidak ada kesalahan'}
+        </p>
 
         <h2>Riwayat Kesalahan</h2>
 
@@ -115,7 +161,11 @@ function BubbleLevel1() {
                 </p>
 
                 <p>
-                  Seharusnya menjadi: {error.correctArray.join(' ')}
+                  Hasil keputusan kamu: {error.wrongArray.join(' ')}
+                </p>
+
+                <p>
+                  Hasil yang benar: {error.correctArray.join(' ')}
                 </p>
 
                 <hr />
@@ -216,7 +266,7 @@ function BubbleLevel1() {
               {currentStep.array[currentStep.indices[0]]} dan{' '}
               {currentStep.array[currentStep.indices[1]]}.{' '}
               {currentStep.array[currentStep.indices[0]] >
-              currentStep.array[currentStep.indices[1]]
+                currentStep.array[currentStep.indices[1]]
                 ? 'Karena angka kiri lebih besar dari angka kanan, keduanya harus ditukar.'
                 : 'Karena angka kiri tidak lebih besar dari angka kanan, keduanya tidak perlu ditukar.'}
             </p>
